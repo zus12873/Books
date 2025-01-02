@@ -1,0 +1,308 @@
+##############   例3-4计算样本距离
+a1=c(6901.6,2321.3,4632.8,1558.2,3447.0,3018.5,2313.6,802.8)
+a2=c(8467.3,1903.9,7385.4,1420.7,5100.9,3452.3,1691.9,645.3)
+a3=c(5067.7,1746.6,3753.4,1430.2,1993.8,2078.8,1524.5,492.8)
+a4=c(5777.3,1776.9,3752.6,1329.1,2517.9,2322.1,1583.4,479.9)
+a5=c(5975.7,1963.5,3809.4,1322.1,3064.3,2352.9,1750.4,614.9)
+X=rbind(a1,a2,a3,a4,a5)
+D=matrix(NA,nrow=5,ncol=5)
+for (i in 1:5){
+  for(j in 1:5)
+  {
+    D[i,j]=sqrt(t(X[i,]-X[j,])%*%(X[i,]-X[j,]))
+  }
+}
+D
+#######################
+
+
+########  3.7.3 模糊聚类法
+library(foreign)
+mydata<-read.spss("3.7.1Asia.sav") 
+#读取E盘下变量名为3.7.1Asia.sav的SPSS原始数据
+X<-as.data.frame(mydata)  #转换数据格式
+Z<-data.frame(scale(X[,2:7]),row.names=X[,1]) #对数据进行标准化，并将各行命名为相应的国家
+library(cluster)
+fresult<-fanny(Z,3)
+summary(fresult)
+plot(fresult)
+##########################
+
+
+##############  例4-3计算Fisher线性判别函数
+library(foreign)
+mydata<-read.spss("E:/例3-5.sav")
+data<-as.data.frame(mydata)
+a1<-which(data[,1]=="北京    ")
+a2<-which(data[,1]=="上海    ")
+b1<-which(data[,1]=="广东    ")
+b2<-which(data[,1]=="西藏    ")
+
+x1<-data[a1,]
+x2<-data[a2,]
+x<-rbind(x1,x2)
+
+y1<-data[b1,]
+y2<-data[b2,]
+y<-rbind(y1,y2)
+
+others<-data[-c(a1,a2,b1,b2),]
+
+xbar<-colMeans(x[,2:9])
+tbar<-colMeans(others[,2:9])
+
+xbar-tbar
+xbar+tbar
+sigmax<-cov(x[,2:9])
+sigmat<-cov(others[,2:9])
+sigma<-(1/27)*(sigmax*1+sigmat*26)
+isigma<-solve(sigma)
+
+(xbar-tbar)%*%isigma #判别函数
+(xbar-tbar)%*%isigma%*%(xbar+tbar)/2#中点
+(xbar-tbar)%*%isigma%*%(xbar-tbar)#马氏距离
+
+xrd<-as.matrix(x[,2:9])
+trd<-as.matrix(others[,2:9])
+yrd<-as.matrix(y[,2:9])
+
+yx<-(xbar-tbar)%*%isigma%*%t(xrd)
+yt<-(xbar-tbar)%*%isigma%*%t(trd)
+yy<-(xbar-tbar)%*%isigma%*%t(yrd)
+################################################
+
+##############  例4-2
+x<-read.csv("E:/例4-2.csv")
+x<-x[,-1]
+a<-as.matrix(x[1:6,2:5])
+mua<-as.matrix(colMeans(a))
+b<-as.matrix(x[7:14,2:5])
+mub<-as.matrix(colMeans(b))
+c<-as.matrix(x[15:20,2:5])
+muc<-as.matrix(colMeans(c))
+sigma<-(cov(a)*5+cov(b)*7+cov(c)*5)/17
+invs<-solve(as.matrix(sigma))
+invs
+#for the first group
+onea<-matrix(1,nrow=6,ncol=1)
+da1<-(a-onea%*%t(mua))%*%invs%*%t(a-onea%*%t(mua))
+da2<-(a-onea%*%t(mub))%*%invs%*%t(a-onea%*%t(mub))
+da3<-(a-onea%*%t(muc))%*%invs%*%t(a-onea%*%t(muc))
+diag(da1)##第一组的各样本距离组一的距离
+diag(da2)##第一组的各样本距离组二的距离
+diag(da3)##第一组的各样本距离组三的距离
+##根据上面输出结果可以知道第一组的各样本距离哪个组的距离是最小的
+#for the second group
+oneb<-matrix(1,nrow=8,ncol=1)
+db1<-(b-oneb%*%t(mua))%*%invs%*%t(b-oneb%*%t(mua))
+db2<-(b-oneb%*%t(mub))%*%invs%*%t(b-oneb%*%t(mub))
+db3<-(b-oneb%*%t(muc))%*%invs%*%t(b-oneb%*%t(muc))
+diag(db1)
+diag(db2)
+diag(db3)
+#for the third group
+onec<-matrix(1,nrow=6,ncol=1)
+dc1<-(c-onec%*%t(mua))%*%invs%*%t(c-onec%*%t(mua))
+dc2<-(c-onec%*%t(mub))%*%invs%*%t(c-onec%*%t(mub))
+dc3<-(c-onec%*%t(muc))%*%invs%*%t(c-onec%*%t(muc))
+diag(dc1)
+diag(dc2)
+diag(dc3)
+##for china mainland and aomen
+oney<-matrix(1,nrow=2,ncol=1)
+y<-as.matrix(x[21:22,2:5])
+dy1<-(y-oney%*%t(mua))%*%invs%*%t(y-oney%*%t(mua))
+dy2<-(y-oney%*%t(mub))%*%invs%*%t(y-oney%*%t(mub))
+dy3<-(y-oney%*%t(muc))%*%invs%*%t(y-oney%*%t(muc))
+diag(dy1)
+diag(dy2)
+diag(dy3)
+##########################################################
+
+
+############## 例5-2
+library(foreign)
+X<-read.spss("E:/例5-2.sav")
+Xs<-as.data.frame(X)[,2:9]
+Z<-scale(Xs)
+coe<-matrix(c(0.3719,0.3753,0.3685,0.3753,0.3723,0.3723,0.1842,0.3647),ncol = 1)
+Y<-Z%*%coe  #计算主成分得分
+
+## 使用标准化的X做主成分得到的第一主成分得分与上面计算的Y符号相反是由于R给出的第一主成分的系数跟SPSS的是相反的
+p2<-princomp(~.,data=as.data.frame(Z),cor=F)
+summary(p2,loadings = T)
+p2$score[,1]
+################################################################################
+
+
+##########   例5-3
+library(foreign)
+X<-read.spss("E:/例5-3.sav")
+Xs<-as.data.frame(X)[,2:8]
+Z<-scale(Xs)
+coe<-matrix(c(0.4071,0.4097,0.4212,0.4,0.4265,0.3767,0.0735,
+              0.0437,-0.1546,-0.1783,-0.2692,0.07,0.3592,0.8576),ncol = 2)
+Y<-Z%*%coe
+X<-as.data.frame(X)
+Y<-data.frame(Y,row.names = X[,1])
+################################################################################
+
+
+########################  例8-1
+fit<-read.csv("E:/例8-1.csv",head=T)
+PHY<-fit[,1:3] #将生理指标数据单独保存并命名为PHY
+EXER<-fit[,4:6] #将运动指标数据单独保存并命名为EXER
+
+install.packages("CCA") #安装做典型相关分析的包CCA
+library(CCA) #加载CCA包
+matcor(PHY,EXER) 
+#matcor()函数分别计算PHY和EXER的自相关矩阵以及两者的相关阵
+
+cc1<-cc(PHY,EXER)  #cc()是进行典型相关分析的函数
+cc1[1] #输出典型相关系数
+cc1[3:4] #输出原始典型系数，即生理指标各变量和运动指标各变量分别关于其相应的典型变量的组合系数，
+cc1[5]  #输出典型变量得分及典型变量与原始变量的相关系数矩阵
+
+####检验  
+ev<-cc1$cor^2   #cc1$cor是典型相关系数，其平方即为典型根
+ev2<-1-ev
+n<-dim(PHY)[1]    #样本量赋值给n
+p<-length(PHY)    #PHY所含变量的个数赋给p
+q<-length(EXER)   #EXER所含变量的个数赋给q
+l<-length(ev)
+m<-n -1 - (p+q+1)/2  
+w<-cbind(NULL)  #定义w以保存中间计算值
+for (i in 1:l){
+  w<-cbind(w,prod(ev2[i:l]))
+}
+
+d<-cbind(NULL)
+Q<-cbind(NULL)
+
+for (i in 1:l){
+  Q<-cbind(Q,-(m-(i-1))*log(w[i]))
+  d<-cbind(d,(p-i+1)*(q-i+1))
+}  
+
+pvalue<-pchisq(Q,d,lower.tail=FALSE)    #计算卡方统计量对应的概率
+bat<-cbind(t(Q),t(d),t(pvalue))
+colnames(bat)<-c("Chi-Squared","df","pvalue")
+rownames(bat)<-c(seq(1:l))
+bat 
+
+##  计算标准化典型相关系数
+sdx<-sapply(PHY,function(x) sd(x))    #计算生理指标各变量的标准差
+s1<-diag(sdx)       #生成以sdx为对角线元素的对角矩阵
+s1%*%cc1$xcoef     #输出生理指标各变量的标准化典型系数 
+
+sdy<-sapply(EXER,function(x) sd(x))    #计算运动指标各变量的标准差 
+s2<-diag(sdy)      #生成对角阵 
+s2%*%cc1$ycoef   #输出运动指标各变量的标准化典型系数  
+##########################################################################
+
+
+################  例8-2
+ccdata<-read.csv("E:/例8-2.csv",head=T)  #读取数据文件
+ECO<-ccdata[,2:7]   #将经济指标数据单独保存并命名为ECO
+AIR<-ccdata[,8:13]   #将空气质量指标数据单独保存并命名为AIR
+ECOS<-scale(ECO)
+AIRS<-scale(AIR)
+#install.packages("CCA")   #安装做典型相关分析的包CCA，若已经安装请跳过此句
+library(CCA)   #加载CCA包
+matcor(ECO,AIR) 
+cc1<-cc(ECO,AIR) 
+cc1[1]  #输出典型相关系数
+cc1[3:4]  #输出原始典型系数
+cc1[5]  #输出典型变量得分及典型变量与原始变量的相关系数矩阵
+
+##  计算标准化典型系数即典型权重
+sdx<-sapply(ECO,function(x) sd(x))   
+s1<-diag(sdx)       
+s1%*% cc1$xcoef    #输出经济指标各变量的标准化典型系数 
+sdy<-sapply(AIR,function(x) sd(x))    
+s2<-diag(sdy)      
+s2 %*% cc1$ycoef   #输出空气质量各变量的标准化典型系数
+
+##  典型相关系数的显著性检验
+ev<-cc1$cor^2  
+ev2<-1-ev
+n<-dim(ECO)[1]  
+p<-length(ECO)  
+q<-length(AIR)  
+l<-length(ev) 
+m<-n -1 - (p+q+1)/2  
+w<-cbind(NULL) 
+for (i in 1:l){
+  w<-cbind(w,prod(ev2[i:l]))}
+d<-cbind(NULL)
+Q<-cbind(NULL)
+for (i in 1:l){
+  Q<-cbind(Q,-(m-(i-1))*log(w[i]))
+  d<-cbind(d,(p-i+1)*(q-i+1))}  
+pvalue<-pchisq(Q,d,lower.tail=FALSE) 
+bat<-cbind(t(Q),t(d),t(pvalue))  
+colnames(bat)<-c("Chi-Squared","df","pvalue")
+rownames(bat)<-c(seq(1:l))
+bat  #输出统计量，自由度和相应的p值
+#########################################################################
+
+
+##  例10-2
+install.packages("aplpack") 
+library(aplpack)
+library(foreign)
+fdata<-read.spss("E:/例10-2.sav")  #读取例10-2的原始SPSS数据
+fdata<-as.data.frame(fdata)  #转换数据格式
+rownames(fdata)<-fdata[,1]  #数据的第一列为上市公司的名称，将其做为数据的行名
+fdata<-fdata[,-1]  #将数据的第一列删除，仅保留10个指标变量x1,...,x10的数据
+faces(fdata,face.type=0)
+##################################################################################
+
+
+##################  例10-3
+data10.3<-data.frame(x1=c(2.89,2.95,2.34,11.85,3.12),
+                     x2=c(5.16,9.15,6.07,2.63,6.96),
+                     x3=c(1.31,1.83,1.16,2.22,2.1),
+                     x4=c(21.71,17.34,24.77,11.89,25.34),
+                     x5=c(23.17,11.33,19.55,7.6,22.28),
+                     x6=c(30.23,12.76,24.81,8.05,28.52),
+                     x7=c(1.79,0.9,1.7,1.09,1.3),
+                     x8=c(1.48,7.28,63.3,11.76,13.18),
+                     x9=c(20.07,29.19,52.88,18.77,24.16),
+                     x10=c(11.04,10.5,48.95,7.63,17.51))
+faces(data10.3,face.type=0,labels = c("宝钢","鞍钢","武钢","首钢","浦项"))
+###############################################################################
+
+
+#############  10.3.2 画星图
+library(foreign)  #加载foreign包以便于下面调用read.spss()函数
+sdata<-read.spss("E:/例3-5.sav")  #读取例3-5的原始SPSS数据，数据中包含8个指标变量
+sdata<-as.data.frame(sdata)  #转换数据格式
+rownames(sdata)<-sdata[,1]  #数据的第一列为地区的名称，将其做为数据的行名
+sdata<-sdata[,-1]  #将数据的第一列删除，仅保留8个指标变量x1,…,x8的数据
+stars(sdata,flip.labels=FALSE)  #画星图
+###################################################################################
+
+
+#############  10.4 星座图
+fdata<-read.spss("E:/例10-2.sav")  #读取例6-2的原始SPSS数据
+fdata<-as.data.frame(fdata)  #转换数据格式
+rownames(fdata)<-fdata[,1]  #数据的第一列为上市公司的名称，将其做为数据的行名
+fdata<-fdata[,-1]
+minf<-sapply(fdata,function(x) min(x))
+maxf<-sapply(fdata,function(x) max(x))
+k<-maxf-minf
+datas<-matrix(NA,nrow = 30,ncol = 10)
+for (i in 1:30){
+  for (j in 1:10){
+    datas[i,j]<-(fdata[i,j]-minf[j])/k[j]
+  }
+}
+datas<-datas*pi
+X<-matrix(NA,nrow = 30,ncol = 2)
+for (i in 1:30){
+  X[i,1]<-mean(cos(datas[i,]))
+  X[i,2]<-mean(sin(datas[i,]))
+}
+X ####用于画图
+
